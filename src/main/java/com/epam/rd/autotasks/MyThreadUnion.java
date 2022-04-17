@@ -27,21 +27,17 @@ public class MyThreadUnion implements ThreadUnion {
         });
     }
 
-    public void calculationResult() {
+    public synchronized void calculationResult() {
         if (!threads.isEmpty()) {
-            synchronized (this) {
-                threads = threads.stream()
-                        .flatMap((Thread thread) -> {
-                            if (thread.getState() == Thread.State.TERMINATED) {
-                                synchronized (listResult) {
-                                    listResult.add(new FinishedThreadResult(thread.getName()));
-                                }
-                            }
-                            return Stream.of(thread);
-                        })
-                        .filter(thread -> thread.getState() != Thread.State.TERMINATED)
-                        .collect(Collectors.toList());
-            }
+            threads = threads.stream()
+                    .flatMap((Thread thread) -> {
+                        if (thread.getState() == Thread.State.TERMINATED) {
+                            listResult.add(new FinishedThreadResult(thread.getName()));
+                        }
+                        return Stream.of(thread);
+                    })
+                    .filter(thread -> thread.getState() != Thread.State.TERMINATED)
+                    .collect(Collectors.toList());
         }
     }
 
