@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 
 public class MyThreadUnion implements ThreadUnion {
     public static final String THREAD_NAME_FORMAT = "%s-worker-%s";
-    public static final int TIMEOUT = 100;
+    public static final int TIMEOUT = 10;
 
     private final String threadUnionName;
     private final AtomicInteger threadNumber = new AtomicInteger(0);
@@ -28,17 +28,15 @@ public class MyThreadUnion implements ThreadUnion {
     }
 
     public synchronized void calculationResult() {
-        if (!threads.isEmpty()) {
-            threads = threads.stream()
-                    .flatMap((Thread thread) -> {
-                        if (thread.getState() == Thread.State.TERMINATED) {
-                            listResult.add(new FinishedThreadResult(thread.getName()));
-                        }
-                        return Stream.of(thread);
-                    })
-                    .filter(thread -> thread.getState() != Thread.State.TERMINATED)
-                    .collect(Collectors.toList());
-        }
+        threads = threads.stream()
+                .flatMap((Thread thread) -> {
+                    if (thread.getState() == Thread.State.TERMINATED) {
+                        listResult.add(new FinishedThreadResult(thread.getName()));
+                    }
+                    return Stream.of(thread);
+                })
+                .filter(thread -> thread.getState() != Thread.State.TERMINATED)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -87,9 +85,11 @@ public class MyThreadUnion implements ThreadUnion {
     }
 
     @Override
-    public List<FinishedThreadResult> results() {
+    public synchronized List<FinishedThreadResult> results() {
+        List<FinishedThreadResult> result;
         calculationResult();
-        return listResult;
+        result = listResult;
+        return result;
     }
 
     @Override
